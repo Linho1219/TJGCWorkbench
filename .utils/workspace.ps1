@@ -39,20 +39,30 @@ function compvc {
     param (
         [string]$inputFile,
         [string]$outputFile = "debug/ownvc.exe",
-        [switch]$srcgbk
+        [switch]$srcgbk,
+        [switch]$ignoreWarnings
     )
 
     Write-Host "Ê¹ÓÃ VC ±àÒë $inputFile µ½ $outputFile" -ForegroundColor DarkBlue
     ensuredir "debug"
     $sourceCharset = if ($srcgbk) { "gbk" } else { "UTF-8" }
-    cl /permissive- /Zc:inline /fp:precise /nologo /W3 /WX /Zc:forScope /RTC1 /Gd /Oy- /MDd /FC /EHsc /sdl /GS /diagnostics:column /source-charset:$sourceCharset /execution-charset:GBK /Fe:$outputFile $inputFile | Out-Default
+    if ($ignoreWarnings) {
+        cl /permissive- /Zc:inline /fp:precise /nologo /W3 /WX- /Zc:forScope /RTC1 /Gd /Oy- /MDd /FC /EHsc /sdl /GS /diagnostics:column /source-charset:$sourceCharset /execution-charset:GBK /Fe:$outputFile $inputFile | Out-Default
+    }
+    else {
+        cl /permissive- /Zc:inline /fp:precise /nologo /W3 /WX /Zc:forScope /RTC1 /Gd /Oy- /MDd /FC /EHsc /sdl /GS /diagnostics:column /source-charset:$sourceCharset /execution-charset:GBK /Fe:$outputFile $inputFile | Out-Default
+    }
     $vcError = $LASTEXITCODE
 
     if ($vcError -eq 0) {
         Remove-Item *.obj -Force
     }
     else {
-        Write-Host "VC ±àÒëÓÐ¾¯¸æ»ò´íÎó£¡" -ForegroundColor Red
+        if ($ignoreWarnings) {
+            Write-Host "VC ±àÒëÓÐ´íÎó£¡" -ForegroundColor Red
+        } else {
+            Write-Host "VC ±àÒëÓÐ¾¯¸æ»ò´íÎó£¡" -ForegroundColor Red
+        }
     }
     return $vcError
 }
@@ -62,17 +72,28 @@ function compgcc {
     param (
         [string]$inputFile,
         [string]$outputFile = "debug/owngcc.exe",
-        [switch]$srcgbk
+        [switch]$srcgbk,
+        [switch]$ignoreWarnings
     )
 
     Write-Host "Ê¹ÓÃ GCC ±àÒë $inputFile µ½ $outputFile" -ForegroundColor DarkBlue
     ensuredir "debug"
     $inputCharset = if ($srcgbk) { "GBK" } else { "UTF-8" }
-    g++ $inputFile -o $outputFile -finput-charset="$inputCharset" -fexec-charset=gbk -Werror | Out-Default
+    if ($ignoreWarnings) {
+        g++ $inputFile -o $outputFile -finput-charset="$inputCharset" -fexec-charset=gbk | Out-Default
+    }
+    else {
+        g++ $inputFile -o $outputFile -finput-charset="$inputCharset" -fexec-charset=gbk -Werror | Out-Default
+    }
     $gccError = $LASTEXITCODE
 
     if ($gccError -ne 0) {
-        Write-Host "GCC ±àÒëÓÐ¾¯¸æ»ò´íÎó£¡" -ForegroundColor Red
+        if($ignoreWarnings) {
+            Write-Host "GCC ±àÒëÓÐ´íÎó£¡" -ForegroundColor Red
+        }
+        else {
+            Write-Host "GCC ±àÒëÓÐ¾¯¸æ»ò´íÎó£¡" -ForegroundColor Red
+        }
     }
     return $gccError
 }
@@ -84,8 +105,8 @@ function runvc {
     )
 
     $ownVcExe = "debug/ownvc.exe"
-    $vcError = compvc -inputFile $ownCpp -outputFile $ownVcExe
-
+    $vcError = compvc -inputFile $ownCpp -outputFile $ownVcExe -ignoreWarnings
+    Write-Host ""
     if ($vcError -eq 0) {
         & .\$ownVcExe
     }
@@ -97,8 +118,8 @@ function rungcc {
         [string]$ownCpp
     )
     $ownGccExe = "debug/owngcc.exe"
-    $gccError = compgcc -inputFile $ownCpp -outputFile $ownGccExe
-
+    $gccError = compgcc -inputFile $ownCpp -outputFile $ownGccExe -ignoreWarnings
+    Write-Host ""
     if ($gccError -eq 0) {
         & .\$ownGccExe
     }
