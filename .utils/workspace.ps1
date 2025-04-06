@@ -11,19 +11,13 @@ function makedata {
 
     $output = "$outputPrefix-data.txt"
 
-    Write-Host "生成测试数据文件 $output" -ForegroundColor DarkBlue
-
-    "[demo]" | Out-File -FilePath $output
-    "$outputPrefix-demo.exe" | Out-File -FilePath $output -Append
-    "[tot]" | Out-File -FilePath $output -Append
-    "$tot" | Out-File -FilePath $output -Append
-    "" | Out-File -FilePath $output -Append  # 空行
-
-    for ($i = 1; $i -le $tot; $i++) {
-        "[$i]" | Out-File -FilePath $output -Append
-        "" | Out-File -FilePath $output -Append  # 空行
-        "" | Out-File -FilePath $output -Append  # 空行
+    $content = @("[demo]", "$outputPrefix-demo.exe", "[tot]", "$tot", "")
+    foreach ($i in 1..$tot) {
+        $content += "[$i]"
+        $content += ""
+        $content += ""
     }
+    [System.IO.File]::WriteAllLines($output, $content)
 
     Write-Host "完成。" -ForegroundColor Green
 
