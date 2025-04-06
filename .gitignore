@@ -1,5 +1,6 @@
 output
 source
+debug
 *.exe
 *.obj
 *.o
