@@ -45,7 +45,7 @@ function compvc {
     Write-Host " π”√ VC ±‡“Î $inputFile µΩ $outputFile" -ForegroundColor DarkBlue
     ensuredir "debug"
     $sourceCharset = if ($srcgbk) { "gbk" } else { "UTF-8" }
-    cl /nologo /W3 /WX /EHsc /source-charset:$sourceCharset /execution-charset:GBK /Fe:$outputFile $inputFile | Out-Default
+    cl /JMC /permissive- /Zc:inline /fp:precise /nologo /W3 /WX /Zc:forScope /RTC1 /Gd /Oy- /MDd /FC /EHsc /sdl /GS /diagnostics:column /source-charset:$sourceCharset /execution-charset:GBK /Fe:$outputFile $inputFile | Out-Default
     $vcError = $LASTEXITCODE
 
     if ($vcError -eq 0) {
