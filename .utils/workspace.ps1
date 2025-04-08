@@ -6,11 +6,10 @@ function makedata {
     # 生成测试数据文件
     param (
         [string]$outputPrefix = "default",
-        [int]$tot = 10
+        [int]$tot = 15
     )
 
     $output = "$outputPrefix-data.txt"
-
     $content = @("[demo]", "$outputPrefix-demo.exe", "[tot]", "$tot", "")
     foreach ($i in 1..$tot) {
         $content += "[$i]"
@@ -18,9 +17,7 @@ function makedata {
         $content += ""
     }
     [System.IO.File]::WriteAllLines($output, $content)
-
-    Write-Host "完成。" -ForegroundColor Green
-
+    Write-Host "已生成测试配置 $output。" -ForegroundColor Green
     code $output
 }
 
