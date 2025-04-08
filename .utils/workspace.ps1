@@ -1,7 +1,3 @@
-Write-Host "正在加载 VC++ 环境..."
-Import-Module "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools\Microsoft.VisualStudio.DevShell.dll"
-Enter-VsDevShell 8825af93 -SkipAutomaticLocation -DevCmdArguments "-arch=x86 -host_arch=x64" | Out-Null
-
 function makedata {
     # 生成测试数据文件
     param (
@@ -274,4 +270,44 @@ function format {
     Remove-Item -Force
 }
 
-Write-Host "环境装载完成。工作区脚本装载完成。" -ForegroundColor Green
+$installkey = & Get-Content "./.utils/.vsinstallkey" 2>$null
+if (-not $installkey) {
+    # 没有提前设置，尝试从快捷方式中提取
+    $shell = New-Object -ComObject WScript.Shell
+    $shortcutPath = "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Visual Studio 2022\Visual Studio Tools\Developer PowerShell for VS 2022.lnk"
+    $shortcut = $shell.CreateShortcut($shortcutPath)
+    $target = $shortcut.TargetPath
+    $arguments = $shortcut.Arguments
+    $fullCommand = "$target $arguments"
+    [System.Runtime.Interopservices.Marshal]::ReleaseComObject($shell) | Out-Null
+    if ($fullCommand -match 'Enter-VsDevShell\s+([a-f0-9]+)') {
+        $installkey = $matches[1]
+        Write-Output "未找到 .vsinstallkey，已从快捷方式中自动提取。"
+        Write-Output $installkey | Out-File -FilePath "./.utils/.vsinstallkey" -Encoding utf8
+    }
+    else {
+        # 尝试从 VS 实例文件夹中提取
+        $instancePath = "C:\ProgramData\Microsoft\VisualStudio\Packages\_Instances"
+        $instanceFolders = Get-ChildItem -Path $instancePath -Directory
+        $targetFolder = $instanceFolders | Where-Object { $_.Name.Length -eq 8 }
+        if ($targetFolder.Count -eq 1) {
+            $installkey = $targetFolder.Name
+            Write-Output "未找到 .vsinstallkey，已从 VS 实例文件夹中自动提取。"
+            Write-Output $installkey | Out-File -FilePath "./.utils/.vsinstallkey" -Encoding utf8
+        }
+        else {
+            # 寄了，提示手动设置
+            Write-Host "未找到安装 key，请检查 .utils/.vsinstallkey 文件。" -ForegroundColor Red
+            code ./.utils/.vsinstallkey
+            Write-Host "你可以在 Developer PowerShell for VS 2022 的快捷方式或终端配置文件中找到。"
+            Write-Host "这是一个 8 位 16 进制数，将其填入 .vsinstallkey 文件中，然后重新启动终端。"
+            return
+        }
+    }
+}
+
+Write-Host "正在加载 VC++ 环境 ($installkey)"
+Import-Module "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools\Microsoft.VisualStudio.DevShell.dll"
+Enter-VsDevShell $installkey -SkipAutomaticLocation -DevCmdArguments "-arch=x86 -host_arch=x64" | Out-Null
+
+Write-Host "环境装载完成。`n" -ForegroundColor Green
