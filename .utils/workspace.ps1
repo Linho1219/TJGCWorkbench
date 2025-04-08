@@ -35,19 +35,22 @@ function compvc {
     # 使用 VC 编译器编译 C++ 文件
     param (
         [string]$inputFile,
-        [string]$outputFile = "debug/ownvc.exe",
+        [string]$outputFile = "debug/dump/ownvc.exe",
         [switch]$srcgbk,
         [switch]$ignoreWarnings
     )
 
-    Write-Host "使用 VC 编译 $inputFile 到 $outputFile" -ForegroundColor DarkBlue
+    Write-Host "使用 VC 编译 $inputFile 到 $outputFile" -ForegroundColor DarkGray
     ensuredir "debug"
+    ensuredir "debug/dump"
     $sourceCharset = if ($srcgbk) { "gbk" } else { "UTF-8" }
+
+    # cl 第一行会输出文件名，跳过
     if ($ignoreWarnings) {
-        cl /permissive- /Zc:inline /fp:precise /nologo /W3 /WX- /Zc:forScope /RTC1 /Gd /Oy- /MDd /FC /EHsc /sdl /GS /diagnostics:column /source-charset:$sourceCharset /execution-charset:GBK /Fe:$outputFile $inputFile | Out-Default
+        cl /permissive- /Zc:inline /fp:precise /nologo /W3 /WX- /Zc:forScope /RTC1 /Gd /Oy- /MDd /FC /EHsc /sdl /GS /diagnostics:column /source-charset:$sourceCharset /execution-charset:GBK /Fe:$outputFile $inputFile | Select-Object -Skip 1 | Out-Default
     }
     else {
-        cl /permissive- /Zc:inline /fp:precise /nologo /W3 /WX /Zc:forScope /RTC1 /Gd /Oy- /MDd /FC /EHsc /sdl /GS /diagnostics:column /source-charset:$sourceCharset /execution-charset:GBK /Fe:$outputFile $inputFile | Out-Default
+        cl /permissive- /Zc:inline /fp:precise /nologo /W3 /WX /Zc:forScope /RTC1 /Gd /Oy- /MDd /FC /EHsc /sdl /GS /diagnostics:column /source-charset:$sourceCharset /execution-charset:GBK /Fe:$outputFile $inputFile | Select-Object -Skip 1 | Out-Default
     }
     $vcError = $LASTEXITCODE
 
@@ -57,7 +60,8 @@ function compvc {
     else {
         if ($ignoreWarnings) {
             Write-Host "VC 编译有错误！" -ForegroundColor Red
-        } else {
+        }
+        else {
             Write-Host "VC 编译有警告或错误！" -ForegroundColor Red
         }
     }
@@ -68,13 +72,14 @@ function compgcc {
     # 使用 GCC 编译器编译 C++ 文件
     param (
         [string]$inputFile,
-        [string]$outputFile = "debug/owngcc.exe",
+        [string]$outputFile = "debug/dump/owngcc.exe",
         [switch]$srcgbk,
         [switch]$ignoreWarnings
     )
 
-    Write-Host "使用 GCC 编译 $inputFile 到 $outputFile" -ForegroundColor DarkBlue
+    Write-Host "使用 GCC 编译 $inputFile 到 $outputFile" -ForegroundColor DarkGray
     ensuredir "debug"
+    ensuredir "debug/dump"
     $inputCharset = if ($srcgbk) { "GBK" } else { "UTF-8" }
     if ($ignoreWarnings) {
         g++ $inputFile -o $outputFile -finput-charset="$inputCharset" -fexec-charset=gbk | Out-Default
@@ -85,7 +90,7 @@ function compgcc {
     $gccError = $LASTEXITCODE
 
     if ($gccError -ne 0) {
-        if($ignoreWarnings) {
+        if ($ignoreWarnings) {
             Write-Host "GCC 编译有错误！" -ForegroundColor Red
         }
         else {
