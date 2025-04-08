@@ -102,7 +102,7 @@ function runvc {
         [string]$ownCpp
     )
 
-    $ownVcExe = "debug/ownvc.exe"
+    $ownVcExe = "debug/dump/ownvc.exe"
     $vcError = compvc -inputFile $ownCpp -outputFile $ownVcExe -ignoreWarnings
     Write-Host ""
     if ($vcError -eq 0) {
@@ -115,7 +115,7 @@ function rungcc {
     param (
         [string]$ownCpp
     )
-    $ownGccExe = "debug/owngcc.exe"
+    $ownGccExe = "debug/dump/owngcc.exe"
     $gccError = compgcc -inputFile $ownCpp -outputFile $ownGccExe -ignoreWarnings
     Write-Host ""
     if ($gccError -eq 0) {
@@ -125,23 +125,23 @@ function rungcc {
 
 function owngcc {
     # 运行 GCC 产物
-    if (-not (Test-Path "debug/owngcc.exe")) {
-        Write-Host "未找到 debug/owngcc.exe。请先编译。" -ForegroundColor Red
+    if (-not (Test-Path "debug/dump/owngcc.exe")) {
+        Write-Host "未找到 debug/dump/owngcc.exe。请先编译。" -ForegroundColor Red
         return
     }
     else {
-        & "debug/owngcc.exe"
+        & "debug/dump/owngcc.exe"
     }
 }
 
 function ownvc {
     # 运行 VC 产物
-    if (-not (Test-Path "debug/ownvc.exe")) {
-        Write-Host "未找到 debug/ownvc.exe。请先编译。" -ForegroundColor Red
+    if (-not (Test-Path "debug/dump/ownvc.exe")) {
+        Write-Host "未找到 debug/dump/ownvc.exe。请先编译。" -ForegroundColor Red
         return
     }
     else {
-        & "debug/ownvc.exe"
+        & "debug/dump/ownvc.exe"
     }
 }
 
@@ -160,72 +160,170 @@ function test {
     }
     $dataSrc = "$dataSrcPrefix-data.txt"
     $dataPrefix = ""
-    $ownGccExe = "debug/owngcc.exe"
-    $ownVcExe = "debug/ownvc.exe"
-    $ownGccRes = "debug/resgcc.txt"
-    $ownVcRes = "debug/resvc.txt"
-    $demoRes = "debug/resdemo.txt"
+    $ownGccExe = "debug/dump/owngcc.exe"
+    $ownVcExe = "debug/dump/ownvc.exe"
+    $gccResPath = "debug/dump/resgcc.txt"
+    $vcResPath = "debug/dump/resvc.txt"
+    $demoResPath = "debug/dump/resdemo.txt"
+
+    $gccConflictPath = "debug/conflictgcc.txt"
+    $vcConflictPath = "debug/conflictvc.txt"
+    $demoConflictPath = "debug/conflictdemo.txt"
 
     $dataNum = & getinput $dataSrc "[tot]"
     if (-not $dataNum) { $dataNum = 0 }
 
     if ($dataNum -ne 0) {
-        Write-Host "读取到 $dataNum 组数据。"
         $demoExe = & getinput $dataSrc "[demo]"
-        Write-Host "使用 demo 程序 $demoExe。"
+        Write-Host "使用 demo 程序 $demoExe，数据组数 $dataNum。"
+        $trim = & getinput $dataSrc "[trim]" 2>$null
+        $maxlineStr = & getinput $dataSrc "[maxline]" 2>$null
+        if ($maxlineStr) {
+            $maxline = [int]$maxlineStr
+            if ($maxline -le 0) {
+                $maxline = 0
+            }
+        }
+        else {
+            $maxline = 0
+        }
     }
     else {
         Write-Host "未读取到数据。仅编译不比对。"
     }
 
-    Write-Host "编译文件：$ownCpp"
-
     $gccErr = compgcc -inputFile $ownCpp -outputFile $ownGccExe -srcgbk:($chkout)
-    if ($gccErr -eq 0) {
-        Write-Host "GCC 编译通过。" -ForegroundColor Green
-    }
-
     $vcErr = compvc -inputFile $ownCpp -outputFile $ownVcExe -srcgbk:($chkout)
-    if ($vcErr -eq 0) {
-        Write-Host "VC 编译通过。" -ForegroundColor Green
-    }
-
-    if ($dataNum -eq 0) { return }
 
     if ($gccErr -ne 0 -or $vcErr -ne 0) { return }
+    if ($dataNum -eq 0) {
+        Write-Host "编译通过。`n" -ForegroundColor Green
+        return
+    }
 
-    "" | Out-File $ownGccRes
-    "" | Out-File $ownVcRes
-    "" | Out-File $demoRes
+    "" | Out-File $gccResPath
+    "" | Out-File $vcResPath
+    "" | Out-File $demoResPath
 
     $barWidth = 45  # 进度条宽度
-    Write-Host -NoNewline "进度: "
+    Write-Host -NoNewline ""
 
+    $time = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    $resultTitle = "测试时间  $time`n编译文件  $ownCpp`n数据源    $dataSrc`n组数      $dataNum`n"
+    $demoOutputs = @($resultTitle)
+    $vcOutputs = @($resultTitle)
+    $gccOutputs = @($resultTitle)
+
+    $demoConflicts = @($resultTitle)
+    $vcConflicts = @($resultTitle)
+    $gccConflicts = @($resultTitle)
+
+    $conflictCount = 0
+    $vcgccdiff = $false
     for ($i = 1; $i -le $dataNum; $i++) {
+        $inputData = & getinput $dataSrc "[$dataPrefix$i]"
+
+        $demoSigleArr = $inputData | & "./$demoExe" 2>&1
+        $vcSingleArr = $inputData | & "./$ownVcExe" 2>&1
+        $gccSingleArr = $inputData | & "./$ownGccExe" 2>&1
+
+        if ($trim -eq "right") {
+            $demoSigleArr = ($demoSigleArr | ForEach-Object { $_.TrimEnd() })
+            $vcSingleArr = ($vcSingleArr | ForEach-Object { $_.TrimEnd() })
+            $gccSingleArr = ($gccSingleArr | ForEach-Object { $_.TrimEnd() })
+        }
+        if ($maxline) {
+            $demoSigleArr = $demoSigleArr | Select-Object -First $maxline
+            $vcSingleArr = $vcSingleArr | Select-Object -First $maxline
+            $gccSingleArr = $gccSingleArr | Select-Object -First $maxline
+        }
+
+        $demoSigle = $demoSigleArr -join "`n"
+        $vcSingle = $vcSingleArr -join "`n"
+        $gccSingle = $gccSingleArr -join "`n"
+
+        $demoOutputs += "[$i]"
+        $demoOutputs += $demoSigle
+        $vcOutputs += "[$i]"
+        $vcOutputs += $vcSingle
+        $gccOutputs += "[$i]"
+        $gccOutputs += $gccSingle
+
+        if ($demoSigle -ne $vcSingle -or $demoSigle -ne $gccSingle) {
+            $conflictCount++
+            $demoConflicts += "[$i Input]"
+            $demoConflicts += $inputData
+            $demoConflicts += "[$i Output]"
+            $demoConflicts += $demoSigle
+
+            $vcConflicts += "[$i Input]"
+            $vcConflicts += $inputData
+            $vcConflicts += "[$i Output]"
+            $vcConflicts += $vcSingle
+
+            $gccConflicts += "[$i Input]"
+            $gccConflicts += $inputData
+            $gccConflicts += "[$i Output]"
+            $gccConflicts += $gccSingle
+
+            if ($vcSingle -ne $gccSingle) {
+                $vcgccdiff = $true
+            }
+        }
+
         $percent = [math]::Round(($i / $dataNum) * 100)
         $filled = [math]::Round(($i / $dataNum) * $barWidth)
         $empty = $barWidth - $filled
-        $bar = "[" + ("=" * $filled) + (" " * $empty) + "] $percent%"
-
-        Write-Host -NoNewline "`r进度: $bar"  # 使用 `r` 回到行首覆盖
-        [Console]::Out.Flush()  # 强制刷新输出
-
-        "[$i]" | Out-File -Append $ownGccRes
-        "[$i]" | Out-File -Append $ownVcRes
-        "[$i]" | Out-File -Append $demoRes
-
-        & getinput $dataSrc "[$dataPrefix$i]" | & "./$ownGccExe" | Out-File -Append $ownGccRes 2>&1
-        & getinput $dataSrc "[$dataPrefix$i]" | & "./$ownVcExe"  | Out-File -Append $ownVcRes  2>&1
-        & getinput $dataSrc "[$dataPrefix$i]" | & "./$demoExe"   | Out-File -Append $demoRes   2>&1
+        if ($conflictCount -ne 0) {
+            $conflict = [math]::Round(($conflictCount / $dataNum) * $barWidth)
+            $filled = $filled - $conflict
+            Write-Host -NoNewline "`r["
+            $redbar = ("=" * $conflict)
+            $normalbar = ("=" * $filled) + (" " * $empty) + "] $percent%"
+            Write-Host -NoNewline $redbar -ForegroundColor Red
+            Write-Host -NoNewline $normalbar
+        }
+        else {
+            $bar = "[" + ("=" * $filled) + (" " * $empty) + "] $percent%"
+            Write-Host -NoNewline "`r$bar"
+        }
+        [Console]::Out.Flush()
     }
-    Write-Host "`n执行完毕。" -ForegroundColor Green
-    # 后续代码不变
-    Write-Host "GCC 编译产物比较：" -ForegroundColor DarkBlue
-    & txtcomp --file1 $demoRes --file2 $ownGccRes --display normal
-    Write-Host "VC 编译产物比较：" -ForegroundColor DarkBlue
-    & txtcomp --file1 $demoRes --file2 $ownVcRes --display normal
-    Write-Host "说明：文件 1 为标解，文件 2 为待测。"
 
+    [System.IO.File]::WriteAllLines($gccResPath, $gccOutputs)
+    [System.IO.File]::WriteAllLines($vcResPath, $vcOutputs)
+    [System.IO.File]::WriteAllLines($demoResPath, $demoOutputs)
+
+    if ($trim -eq "right") {
+        $compareConfig = "忽略行尾空格匹配"
+    }
+    else {
+        $compareConfig = "完全匹配"
+    }
+    if ($maxline) {
+        $compareConfig += "前 $maxline 行"
+    }
+
+    if ($conflictCount -ne 0) {
+        [System.IO.File]::WriteAllLines($gccConflictPath, $gccConflicts)
+        [System.IO.File]::WriteAllLines($vcConflictPath, $vcConflicts)
+        [System.IO.File]::WriteAllLines($demoConflictPath, $demoConflicts)
+
+        Write-Host "`n测试完毕。$compareConfig，有 $conflictCount 组冲突。" -ForegroundColor Yellow
+        if ($vcgccdiff) {
+            code --diff $demoConflictPath $vcConflictPath
+            code --diff $demoConflictPath $gccConflictPath
+            Write-Host "GCC 和 VC 结果不一致。启动两个比对。" -ForegroundColor Red
+        }
+        else {
+            code --diff $demoConflictPath $vcConflictPath
+            Write-Host "启动比对。" -ForegroundColor Yellow
+        }
+    }
+    else {
+        Write-Host "`n测试完毕。$compareConfig，无冲突。" -ForegroundColor Green
+    }
+    Write-Host ""
 }
 
 function pack {
@@ -264,7 +362,7 @@ function format {
     $targetFolder = "./output"
     Get-ChildItem -Path $targetFolder -Directory -Recurse |
     Where-Object {
-        # 检查文件夹是否为空（没有文件和子文件夹）
+        # 检查文件夹是否为空
         @(Get-ChildItem -Path $_.FullName -Force).Count -eq 0
     } |
     Remove-Item -Force
