@@ -1,5 +1,8 @@
-output
-source
-debug
+/output
+/source
+/debug
 *.obj
 *.o
+/.utils/.vsinstallkey
+*.test.cpp
+*.test.c
