@@ -1,5 +1,5 @@
 function makedata {
-    # Éú³É²âÊÔÊı¾İÎÄ¼ş
+    # ç”Ÿæˆæµ‹è¯•æ•°æ®æ–‡ä»¶
     param (
         [string]$outputPrefix = "default",
         [int]$tot = 15
@@ -13,12 +13,12 @@ function makedata {
         $content += ""
     }
     [System.IO.File]::WriteAllLines($output, $content)
-    Write-Host "ÒÑÉú³É²âÊÔÅäÖÃ $output¡£" -ForegroundColor Green
+    Write-Host "å·²ç”Ÿæˆæµ‹è¯•é…ç½® $outputã€‚" -ForegroundColor Green
     code $output
 }
 
 function ensuredir {
-    # È·±£Ä¿Â¼´æÔÚ£¬Èç¹û²»´æÔÚÔò´´½¨
+    # ç¡®ä¿ç›®å½•å­˜åœ¨ï¼Œå¦‚æœä¸å­˜åœ¨åˆ™åˆ›å»º
     param (
         [string]$dirPath
     )
@@ -28,7 +28,7 @@ function ensuredir {
 }
 
 function compvc {
-    # Ê¹ÓÃ VC ±àÒëÆ÷±àÒë C++ ÎÄ¼ş
+    # ä½¿ç”¨ VC ç¼–è¯‘å™¨ç¼–è¯‘ C++ æ–‡ä»¶
     param (
         [string]$inputFile,
         [string]$outputFile = "debug/dump/ownvc.exe",
@@ -36,12 +36,12 @@ function compvc {
         [switch]$ignoreWarnings
     )
 
-    Write-Host "Ê¹ÓÃ VC ±àÒë $inputFile µ½ $outputFile" -ForegroundColor DarkGray
+    Write-Host "ä½¿ç”¨ VC ç¼–è¯‘ $inputFile åˆ° $outputFile" -ForegroundColor DarkGray
     ensuredir "debug"
     ensuredir "debug/dump"
     $sourceCharset = if ($srcgbk) { "gbk" } else { "UTF-8" }
 
-    # cl µÚÒ»ĞĞ»áÊä³öÎÄ¼şÃû£¬Ìø¹ı
+    # cl ç¬¬ä¸€è¡Œä¼šè¾“å‡ºæ–‡ä»¶åï¼Œè·³è¿‡
     if ($ignoreWarnings) {
         cl /permissive- /Zc:inline /fp:precise /nologo /W3 /WX- /Zc:forScope /RTC1 /Gd /Oy- /MDd /FC /EHsc /sdl /GS /diagnostics:column /source-charset:$sourceCharset /execution-charset:GBK /Fe:$outputFile $inputFile | Select-Object -Skip 1 | Out-Default
     }
@@ -55,17 +55,17 @@ function compvc {
     }
     else {
         if ($ignoreWarnings) {
-            Write-Host "VC ±àÒëÓĞ´íÎó£¡" -ForegroundColor Red
+            Write-Host "VC ç¼–è¯‘æœ‰é”™è¯¯ï¼" -ForegroundColor Red
         }
         else {
-            Write-Host "VC ±àÒëÓĞ¾¯¸æ»ò´íÎó£¡" -ForegroundColor Red
+            Write-Host "VC ç¼–è¯‘æœ‰è­¦å‘Šæˆ–é”™è¯¯ï¼" -ForegroundColor Red
         }
     }
     return $vcError
 }
 
 function compgcc {
-    # Ê¹ÓÃ GCC ±àÒëÆ÷±àÒë C++ ÎÄ¼ş
+    # ä½¿ç”¨ GCC ç¼–è¯‘å™¨ç¼–è¯‘ C++ æ–‡ä»¶
     param (
         [string]$inputFile,
         [string]$outputFile = "debug/dump/owngcc.exe",
@@ -73,7 +73,7 @@ function compgcc {
         [switch]$ignoreWarnings
     )
 
-    Write-Host "Ê¹ÓÃ GCC ±àÒë $inputFile µ½ $outputFile" -ForegroundColor DarkGray
+    Write-Host "ä½¿ç”¨ GCC ç¼–è¯‘ $inputFile åˆ° $outputFile" -ForegroundColor DarkGray
     ensuredir "debug"
     ensuredir "debug/dump"
     $inputCharset = if ($srcgbk) { "GBK" } else { "UTF-8" }
@@ -87,17 +87,17 @@ function compgcc {
 
     if ($gccError -ne 0) {
         if ($ignoreWarnings) {
-            Write-Host "GCC ±àÒëÓĞ´íÎó£¡" -ForegroundColor Red
+            Write-Host "GCC ç¼–è¯‘æœ‰é”™è¯¯ï¼" -ForegroundColor Red
         }
         else {
-            Write-Host "GCC ±àÒëÓĞ¾¯¸æ»ò´íÎó£¡" -ForegroundColor Red
+            Write-Host "GCC ç¼–è¯‘æœ‰è­¦å‘Šæˆ–é”™è¯¯ï¼" -ForegroundColor Red
         }
     }
     return $gccError
 }
 
 function runvc {
-    # ±àÒëÔËĞĞ VC
+    # ç¼–è¯‘è¿è¡Œ VC
     param (
         [string]$ownCpp
     )
@@ -111,7 +111,7 @@ function runvc {
 }
 
 function rungcc {
-    # ±àÒëÔËĞĞ GCC
+    # ç¼–è¯‘è¿è¡Œ GCC
     param (
         [string]$ownCpp
     )
@@ -124,9 +124,9 @@ function rungcc {
 }
 
 function owngcc {
-    # ÔËĞĞ GCC ²úÎï
+    # è¿è¡Œ GCC äº§ç‰©
     if (-not (Test-Path "debug/dump/owngcc.exe")) {
-        Write-Host "Î´ÕÒµ½ debug/dump/owngcc.exe¡£ÇëÏÈ±àÒë¡£" -ForegroundColor Red
+        Write-Host "æœªæ‰¾åˆ° debug/dump/owngcc.exeã€‚è¯·å…ˆç¼–è¯‘ã€‚" -ForegroundColor Red
         return
     }
     else {
@@ -135,9 +135,9 @@ function owngcc {
 }
 
 function ownvc {
-    # ÔËĞĞ VC ²úÎï
+    # è¿è¡Œ VC äº§ç‰©
     if (-not (Test-Path "debug/dump/ownvc.exe")) {
-        Write-Host "Î´ÕÒµ½ debug/dump/ownvc.exe¡£ÇëÏÈ±àÒë¡£" -ForegroundColor Red
+        Write-Host "æœªæ‰¾åˆ° debug/dump/ownvc.exeã€‚è¯·å…ˆç¼–è¯‘ã€‚" -ForegroundColor Red
         return
     }
     else {
@@ -146,12 +146,12 @@ function ownvc {
 }
 
 function test {
-    # ÍêÕû²âÊÔ
+    # å®Œæ•´æµ‹è¯•
     # eg test 4-b2 -2.cpp
     # eg test 4-b2 .c -chkout
     param (
-        [string]$dataSrcPrefix, # Êı¾İÎÄ¼şÇ°×º
-        [string]$ownCpp, # Ô´ÎÄ¼ş
+        [string]$dataSrcPrefix, # æ•°æ®æ–‡ä»¶å‰ç¼€
+        [string]$ownCpp, # æºæ–‡ä»¶
         [switch]$chkout
     )
     $ownCpp = "$dataSrcPrefix$ownCpp"
@@ -175,7 +175,7 @@ function test {
 
     if ($dataNum -ne 0) {
         $demoExe = & getinput $dataSrc "[demo]"
-        Write-Host "Ê¹ÓÃ demo ³ÌĞò $demoExe£¬Êı¾İ×éÊı $dataNum¡£"
+        Write-Host "ä½¿ç”¨ demo ç¨‹åº $demoExeï¼Œæ•°æ®ç»„æ•° $dataNumã€‚"
         $trim = & getinput $dataSrc "[trim]" 2>$null
         $maxlineStr = & getinput $dataSrc "[maxline]" 2>$null
         if ($maxlineStr) {
@@ -189,7 +189,7 @@ function test {
         }
     }
     else {
-        Write-Host "Î´¶ÁÈ¡µ½Êı¾İ¡£½ö±àÒë²»±È¶Ô¡£"
+        Write-Host "æœªè¯»å–åˆ°æ•°æ®ã€‚ä»…ç¼–è¯‘ä¸æ¯”å¯¹ã€‚"
     }
 
     $gccErr = compgcc -inputFile $ownCpp -outputFile $ownGccExe -srcgbk:($chkout)
@@ -197,7 +197,7 @@ function test {
 
     if ($gccErr -ne 0 -or $vcErr -ne 0) { return }
     if ($dataNum -eq 0) {
-        Write-Host "±àÒëÍ¨¹ı¡£`n" -ForegroundColor Green
+        Write-Host "ç¼–è¯‘é€šè¿‡ã€‚`n" -ForegroundColor Green
         return
     }
 
@@ -205,11 +205,11 @@ function test {
     "" | Out-File $vcResPath
     "" | Out-File $demoResPath
 
-    $barWidth = 45  # ½ø¶ÈÌõ¿í¶È
+    $barWidth = 45  # è¿›åº¦æ¡å®½åº¦
     Write-Host -NoNewline ""
 
     $time = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    $resultTitle = "²âÊÔÊ±¼ä  $time`n±àÒëÎÄ¼ş  $ownCpp`nÊı¾İÔ´    $dataSrc`n×éÊı      $dataNum`n"
+    $resultTitle = "æµ‹è¯•æ—¶é—´  $time`nç¼–è¯‘æ–‡ä»¶  $ownCpp`næ•°æ®æº    $dataSrc`nç»„æ•°      $dataNum`n"
     $demoOutputs = @($resultTitle)
     $vcOutputs = @($resultTitle)
     $gccOutputs = @($resultTitle)
@@ -295,13 +295,13 @@ function test {
     [System.IO.File]::WriteAllLines($demoResPath, $demoOutputs)
 
     if ($trim -eq "right") {
-        $compareConfig = "ºöÂÔĞĞÎ²¿Õ¸ñÆ¥Åä"
+        $compareConfig = "å¿½ç•¥è¡Œå°¾ç©ºæ ¼åŒ¹é…"
     }
     else {
-        $compareConfig = "ÍêÈ«Æ¥Åä"
+        $compareConfig = "å®Œå…¨åŒ¹é…"
     }
     if ($maxline) {
-        $compareConfig += "Ç° $maxline ĞĞ"
+        $compareConfig += "å‰ $maxline è¡Œ"
     }
 
     if ($conflictCount -ne 0) {
@@ -309,44 +309,44 @@ function test {
         [System.IO.File]::WriteAllLines($vcConflictPath, $vcConflicts)
         [System.IO.File]::WriteAllLines($demoConflictPath, $demoConflicts)
 
-        Write-Host "`n²âÊÔÍê±Ï¡£$compareConfig£¬ÓĞ $conflictCount ×é³åÍ»¡£" -ForegroundColor Yellow
+        Write-Host "`næµ‹è¯•å®Œæ¯•ã€‚$compareConfigï¼Œæœ‰ $conflictCount ç»„å†²çªã€‚" -ForegroundColor Yellow
         if ($vcgccdiff) {
             code --diff $demoConflictPath $vcConflictPath
             code --diff $demoConflictPath $gccConflictPath
-            Write-Host "GCC ºÍ VC ½á¹û²»Ò»ÖÂ¡£Æô¶¯Á½¸ö±È¶Ô¡£" -ForegroundColor Red
+            Write-Host "GCC å’Œ VC ç»“æœä¸ä¸€è‡´ã€‚å¯åŠ¨ä¸¤ä¸ªæ¯”å¯¹ã€‚" -ForegroundColor Red
         }
         else {
             code --diff $demoConflictPath $vcConflictPath
-            Write-Host "Æô¶¯±È¶Ô¡£" -ForegroundColor Yellow
+            Write-Host "å¯åŠ¨æ¯”å¯¹ã€‚" -ForegroundColor Yellow
         }
     }
     else {
-        Write-Host "`n²âÊÔÍê±Ï¡£$compareConfig£¬ÎŞ³åÍ»¡£" -ForegroundColor Green
+        Write-Host "`næµ‹è¯•å®Œæ¯•ã€‚$compareConfigï¼Œæ— å†²çªã€‚" -ForegroundColor Green
     }
     Write-Host ""
 }
 
 function pack {
-    # ´ò°üÎÄ¼şµ½ ./source ÎÄ¼ş¼Ğ
+    # æ‰“åŒ…æ–‡ä»¶åˆ° ./source æ–‡ä»¶å¤¹
     if (Test-Path "./source") {
-        Write-Host "´íÎó£º./source ÎÄ¼ş¼ĞÒÑ´æÔÚ£¡" -ForegroundColor Red
+        Write-Host "é”™è¯¯ï¼š./source æ–‡ä»¶å¤¹å·²å­˜åœ¨ï¼" -ForegroundColor Red
         return
     }
 
     New-Item -Path "./source" -ItemType Directory | Out-Null
     Move-Item -Path *-data.txt, *-demo.exe, *.cpp, *.c -Destination "./source" -ErrorAction SilentlyContinue
-    Write-Host "ÎÄ¼şÒÑÒÆ¶¯µ½ ./source ÎÄ¼ş¼Ğ¡£" -ForegroundColor Green
+    Write-Host "æ–‡ä»¶å·²ç§»åŠ¨åˆ° ./source æ–‡ä»¶å¤¹ã€‚" -ForegroundColor Green
 }
 
 function unpack {
-    # ½â°üÎÄ¼şµ½µ±Ç°Ä¿Â¼
+    # è§£åŒ…æ–‡ä»¶åˆ°å½“å‰ç›®å½•
     if (-not (Test-Path "./source")) {
-        Write-Host "´íÎó£º./source ÎÄ¼ş¼Ğ²»´æÔÚ£¡" -ForegroundColor Red
+        Write-Host "é”™è¯¯ï¼š./source æ–‡ä»¶å¤¹ä¸å­˜åœ¨ï¼" -ForegroundColor Red
         return
     }
     Move-Item -Path "./source/*-data.txt", "./source/*-demo.exe", "./source/*.cpp", "./source/*.c" -Destination "./" -ErrorAction SilentlyContinue
     Remove-Item -Path "./source" -Force
-    Write-Host "./source ÒÑ½â°ü¡£" -ForegroundColor Green
+    Write-Host "./source å·²è§£åŒ…ã€‚" -ForegroundColor Green
 }
 
 function listcolors {
@@ -357,12 +357,14 @@ function listcolors {
     }
 }
 
+
+. ./.utils/tjformat.ps1
 function format {
-    & tjformat . -c .utils/tjformat.json5
+    & tjformat .
     $targetFolder = "./output"
     Get-ChildItem -Path $targetFolder -Directory -Recurse |
     Where-Object {
-        # ¼ì²éÎÄ¼ş¼ĞÊÇ·ñÎª¿Õ
+        # æ£€æŸ¥æ–‡ä»¶å¤¹æ˜¯å¦ä¸ºç©º
         @(Get-ChildItem -Path $_.FullName -Force).Count -eq 0
     } |
     Remove-Item -Force
@@ -370,7 +372,7 @@ function format {
 
 $installkey = & Get-Content "./.utils/.vsinstallkey" 2>$null
 if (-not $installkey) {
-    # Ã»ÓĞÌáÇ°ÉèÖÃ£¬³¢ÊÔ´Ó¿ì½İ·½Ê½ÖĞÌáÈ¡
+    # æ²¡æœ‰æå‰è®¾ç½®ï¼Œå°è¯•ä»å¿«æ·æ–¹å¼ä¸­æå–
     $shell = New-Object -ComObject WScript.Shell
     $shortcutPath = "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Visual Studio 2022\Visual Studio Tools\Developer PowerShell for VS 2022.lnk"
     $shortcut = $shell.CreateShortcut($shortcutPath)
@@ -380,32 +382,32 @@ if (-not $installkey) {
     [System.Runtime.Interopservices.Marshal]::ReleaseComObject($shell) | Out-Null
     if ($fullCommand -match 'Enter-VsDevShell\s+([a-f0-9]+)') {
         $installkey = $matches[1]
-        Write-Output "Î´ÕÒµ½ .vsinstallkey£¬ÒÑ´Ó¿ì½İ·½Ê½ÖĞ×Ô¶¯ÌáÈ¡¡£"
+        Write-Output "æœªæ‰¾åˆ° .vsinstallkeyï¼Œå·²ä»å¿«æ·æ–¹å¼ä¸­è‡ªåŠ¨æå–ã€‚"
         Write-Output $installkey | Out-File -FilePath "./.utils/.vsinstallkey" -Encoding utf8
     }
     else {
-        # ³¢ÊÔ´Ó VS ÊµÀıÎÄ¼ş¼ĞÖĞÌáÈ¡
+        # å°è¯•ä» VS å®ä¾‹æ–‡ä»¶å¤¹ä¸­æå–
         $instancePath = "C:\ProgramData\Microsoft\VisualStudio\Packages\_Instances"
         $instanceFolders = Get-ChildItem -Path $instancePath -Directory
         $targetFolder = $instanceFolders | Where-Object { $_.Name.Length -eq 8 }
         if ($targetFolder.Count -eq 1) {
             $installkey = $targetFolder.Name
-            Write-Output "Î´ÕÒµ½ .vsinstallkey£¬ÒÑ´Ó VS ÊµÀıÎÄ¼ş¼ĞÖĞ×Ô¶¯ÌáÈ¡¡£"
+            Write-Output "æœªæ‰¾åˆ° .vsinstallkeyï¼Œå·²ä» VS å®ä¾‹æ–‡ä»¶å¤¹ä¸­è‡ªåŠ¨æå–ã€‚"
             Write-Output $installkey | Out-File -FilePath "./.utils/.vsinstallkey" -Encoding utf8
         }
         else {
-            # ¼ÄÁË£¬ÌáÊ¾ÊÖ¶¯ÉèÖÃ
-            Write-Host "Î´ÕÒµ½°²×° key£¬Çë¼ì²é .utils/.vsinstallkey ÎÄ¼ş¡£" -ForegroundColor Red
+            # å¯„äº†ï¼Œæç¤ºæ‰‹åŠ¨è®¾ç½®
+            Write-Host "æœªæ‰¾åˆ°å®‰è£… keyï¼Œè¯·æ£€æŸ¥ .utils/.vsinstallkey æ–‡ä»¶ã€‚" -ForegroundColor Red
             code ./.utils/.vsinstallkey
-            Write-Host "Äã¿ÉÒÔÔÚ Developer PowerShell for VS 2022 µÄ¿ì½İ·½Ê½»òÖÕ¶ËÅäÖÃÎÄ¼şÖĞÕÒµ½¡£"
-            Write-Host "ÕâÊÇÒ»¸ö 8 Î» 16 ½øÖÆÊı£¬½«ÆäÌîÈë .vsinstallkey ÎÄ¼şÖĞ£¬È»ºóÖØĞÂÆô¶¯ÖÕ¶Ë¡£"
+            Write-Host "ä½ å¯ä»¥åœ¨ Developer PowerShell for VS 2022 çš„å¿«æ·æ–¹å¼æˆ–ç»ˆç«¯é…ç½®æ–‡ä»¶ä¸­æ‰¾åˆ°ã€‚"
+            Write-Host "è¿™æ˜¯ä¸€ä¸ª 8 ä½ 16 è¿›åˆ¶æ•°ï¼Œå°†å…¶å¡«å…¥ .vsinstallkey æ–‡ä»¶ä¸­ï¼Œç„¶åé‡æ–°å¯åŠ¨ç»ˆç«¯ã€‚"
             return
         }
     }
 }
 
-Write-Host "ÕıÔÚ¼ÓÔØ VC++ »·¾³ ($installkey)"
+Write-Host "æ­£åœ¨åŠ è½½ VC++ ç¯å¢ƒ ($installkey)"
 Import-Module "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools\Microsoft.VisualStudio.DevShell.dll"
 Enter-VsDevShell $installkey -SkipAutomaticLocation -DevCmdArguments "-arch=x86 -host_arch=x64" | Out-Null
 
-Write-Host "»·¾³×°ÔØÍê³É¡£`n" -ForegroundColor Green
+Write-Host "ç¯å¢ƒè£…è½½å®Œæˆã€‚`n" -ForegroundColor Green
