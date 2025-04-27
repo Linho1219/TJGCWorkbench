@@ -20,4 +20,4 @@
 
 ## 指南
 
-懒得写了，自行翻阅 `workspace.ps1` 即可。
+懒得写了，~~自行翻阅 `workspace.ps1` 即可~~ 你可以在 [DeepWiki](https://deepwiki.com/Linho1219/TJGCWorkbench/7-function-reference) 上阅读 AI 生成的函数使用手册。
